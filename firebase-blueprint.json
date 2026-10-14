@@ -80,7 +80,8 @@
         "principalReturn": { "type": "boolean" },
         "status": { "type": "string", "enum": ["active", "inactive"] },
         "badge": { "type": "string" },
-        "colorScheme": { "type": "string" }
+        "colorScheme": { "type": "string" },
+        "websiteUrl": { "type": "string" }
       },
       "required": ["id", "name", "dailyRoi", "durationDays", "minDeposit", "maxDeposit", "status"]
     },

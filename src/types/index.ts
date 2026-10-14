@@ -67,6 +67,7 @@ export interface InvestmentPlan {
   status: 'active' | 'inactive';
   badge?: string;
   colorScheme: 'emerald' | 'cyan' | 'amber' | 'purple';
+  websiteUrl?: string; // External website link for the plan
 }
 
 export interface UserInvestment {

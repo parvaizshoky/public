@@ -35,6 +35,7 @@ export const initialPlans: InvestmentPlan[] = [
     status: 'active',
     badge: 'Earn $3.00 / Day',
     colorScheme: 'emerald',
+    websiteUrl: 'https://tronscan.org',
   },
   {
     id: 'plan_growth_50',
@@ -48,6 +49,7 @@ export const initialPlans: InvestmentPlan[] = [
     status: 'active',
     badge: 'Earn $5.00 / Day',
     colorScheme: 'cyan',
+    websiteUrl: 'https://tether.to',
   },
   {
     id: 'plan_advanced_100',

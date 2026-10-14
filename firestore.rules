@@ -60,6 +60,16 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Ad Campaigns & Paid Tasks Collection
+    match /campaigns/{campaignId} {
+      allow read, write: if true;
+    }
+
+    // Campaign Claims & Logs
+    match /campaign_claims/{claimId} {
+      allow read, write: if true;
+    }
+
     // Test connection doc
     match /test/{docId} {
       allow read, write: if true;

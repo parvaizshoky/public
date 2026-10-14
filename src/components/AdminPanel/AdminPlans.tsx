@@ -9,6 +9,10 @@ import {
   XCircle,
   X,
   Save,
+  Globe,
+  ExternalLink,
+  Link as LinkIcon,
+  Sparkles,
 } from 'lucide-react';
 
 export const AdminPlans: React.FC = () => {
@@ -27,8 +31,9 @@ export const AdminPlans: React.FC = () => {
       maxDeposit: 1000,
       principalReturn: true,
       status: 'active',
-      badge: 'Daily Yield Hogi',
+      badge: 'Earn Daily USDT',
       colorScheme: 'emerald',
+      websiteUrl: '',
     });
     setModalMode('create');
   };
@@ -42,6 +47,8 @@ export const AdminPlans: React.FC = () => {
     e.preventDefault();
     if (!editingPlan.name || !editingPlan.dailyRoi || !editingPlan.durationDays) return;
 
+    const trimmedUrl = editingPlan.websiteUrl?.trim();
+
     if (modalMode === 'create') {
       adminCreatePlan({
         name: editingPlan.name!,
@@ -54,9 +61,13 @@ export const AdminPlans: React.FC = () => {
         status: editingPlan.status || 'active',
         badge: editingPlan.badge || '',
         colorScheme: editingPlan.colorScheme || 'emerald',
+        websiteUrl: trimmedUrl && trimmedUrl.length > 0 ? trimmedUrl : undefined,
       });
     } else if (modalMode === 'edit' && editingPlan.id) {
-      adminUpdatePlan(editingPlan as InvestmentPlan);
+      adminUpdatePlan({
+        ...(editingPlan as InvestmentPlan),
+        websiteUrl: trimmedUrl && trimmedUrl.length > 0 ? trimmedUrl : undefined,
+      });
     }
 
     setModalMode(null);
@@ -81,7 +92,7 @@ export const AdminPlans: React.FC = () => {
             </span>
           </h2>
           <p className="text-xs text-slate-500 mt-1">
-            Create new staking tiers, adjust daily ROI percentages, modify durations, and activate/deactivate plans.
+            Create new staking tiers, attach external website links, adjust daily ROI percentages, and manage active plans.
           </p>
         </div>
 
@@ -100,7 +111,7 @@ export const AdminPlans: React.FC = () => {
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50">
-                <th className="py-3 px-4">Plan Name & Badge</th>
+                <th className="py-3 px-4">Plan Name & Website Link</th>
                 <th className="py-3 px-4">Daily ROI %</th>
                 <th className="py-3 px-4">Daily Earning Preview</th>
                 <th className="py-3 px-4">Duration</th>
@@ -125,9 +136,30 @@ export const AdminPlans: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-slate-500 truncate max-w-xs">
+                      <div className="text-[11px] text-slate-500 truncate max-w-xs mt-0.5">
                         {plan.tagline}
                       </div>
+
+                      {/* Display Website Link if attached */}
+                      {plan.websiteUrl ? (
+                        <div className="mt-1.5">
+                          <a
+                            href={plan.websiteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] text-teal-700 hover:text-teal-900 bg-teal-50 hover:bg-teal-100/70 px-2 py-0.5 rounded border border-teal-200 transition-colors font-mono max-w-xs truncate"
+                            title={plan.websiteUrl}
+                          >
+                            <Globe className="w-3 h-3 text-teal-600 shrink-0" />
+                            <span className="truncate">{plan.websiteUrl}</span>
+                            <ExternalLink className="w-2.5 h-2.5 shrink-0 text-teal-500" />
+                          </a>
+                        </div>
+                      ) : (
+                        <span className="inline-block mt-1 text-[10px] text-slate-400 font-mono">
+                          No external website link attached
+                        </span>
+                      )}
                     </td>
 
                     <td className="py-3.5 px-4 font-bold text-emerald-700 text-sm">
@@ -136,7 +168,7 @@ export const AdminPlans: React.FC = () => {
 
                     <td className="py-3.5 px-4 font-bold text-emerald-800 font-sans">
                       <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
-                        ${dailyProfitOnMin.toFixed(2)}/day Hogi
+                        Earn ${dailyProfitOnMin.toFixed(2)} / Day
                       </span>
                     </td>
 
@@ -212,7 +244,7 @@ export const AdminPlans: React.FC = () => {
       {/* Plan Edit / Create Modal */}
       {modalMode && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white border border-slate-200 rounded-3xl shadow-2xl p-6 max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setModalMode(null)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1 rounded-lg"
@@ -220,11 +252,12 @@ export const AdminPlans: React.FC = () => {
               <X className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-extrabold text-slate-900 mb-1">
-              {modalMode === 'create' ? 'Create New Staking Plan' : 'Edit Investment Plan'}
+            <h3 className="text-base font-extrabold text-slate-900 mb-1 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span>{modalMode === 'create' ? 'Create New Staking Plan' : 'Edit Investment Plan'}</span>
             </h3>
             <p className="text-xs text-slate-500 mb-4">
-              Configure parameters that directly govern return generation and client terms.
+              Configure parameters that directly govern return generation, client terms, and external website links.
             </p>
 
             <form onSubmit={handleSavePlan} className="space-y-4">
@@ -237,6 +270,7 @@ export const AdminPlans: React.FC = () => {
                   required
                   value={editingPlan.name || ''}
                   onChange={(e) => setEditingPlan({ ...editingPlan, name: e.target.value })}
+                  placeholder="e.g. Starter Plan - $30"
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-teal-500"
                 />
               </div>
@@ -249,8 +283,52 @@ export const AdminPlans: React.FC = () => {
                   type="text"
                   value={editingPlan.tagline || ''}
                   onChange={(e) => setEditingPlan({ ...editingPlan, tagline: e.target.value })}
+                  placeholder="e.g. Earn $3.00 daily income with a $30 investment."
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-teal-500"
                 />
+              </div>
+
+              {/* External Website Link Input (Requested: "create new plan wale section mein link ka bhii form hoo.jaha mein kisi website ki link paste kersko") */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Globe className="w-3.5 h-3.5 text-teal-600" />
+                    <span>Website Link / Project URL (Optional)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    Paste any website URL
+                  </span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="url"
+                    placeholder="https://example.com or paste any website link here"
+                    value={editingPlan.websiteUrl || ''}
+                    onChange={(e) => setEditingPlan({ ...editingPlan, websiteUrl: e.target.value })}
+                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-teal-500 font-mono placeholder:font-sans"
+                  />
+                  <LinkIcon className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                </div>
+                {editingPlan.websiteUrl && (
+                  <div className="mt-1 flex items-center justify-between text-[11px] text-teal-700 bg-teal-50 px-2 py-1 rounded-lg border border-teal-200">
+                    <span className="flex items-center gap-1 truncate">
+                      <Globe className="w-3 h-3 text-teal-600 shrink-0" />
+                      <span className="truncate">Preview: {editingPlan.websiteUrl}</span>
+                    </span>
+                    <a
+                      href={editingPlan.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-teal-800 font-bold hover:underline shrink-0 flex items-center gap-0.5 ml-2"
+                    >
+                      <span>Test Link</span>
+                      <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
+                )}
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Users can click this link on the plan card to visit the official website or project page.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -329,7 +407,7 @@ export const AdminPlans: React.FC = () => {
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Daily $3 Hogi"
+                    placeholder="e.g. Earn $3.00 Daily"
                     value={editingPlan.badge || ''}
                     onChange={(e) => setEditingPlan({ ...editingPlan, badge: e.target.value })}
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl text-slate-900 focus:bg-white focus:outline-none focus:border-teal-500"

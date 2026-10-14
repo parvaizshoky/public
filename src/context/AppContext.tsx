@@ -1069,6 +1069,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const adminDeletePlan = (planId: string) => {
     setPlans((prev) => prev.filter((p) => p.id !== planId));
+    deleteDocFromFirestore('plans', planId);
   };
 
   const adminAdjustUserBalance = (userId: string, deltaAmount: number, reason: string) => {
