@@ -17,93 +17,93 @@ export const initialPlatformSettings: PlatformSettings = {
   withdrawalFeePercent: 1.5,
   referralTier1Percent: 8,
   referralTier2Percent: 3,
-  announcement: 'TronYield TRC-20 Protocol active. Manual admin verification guarantees asset security and audit-grade settlement.',
+  announcement: 'Online Earning Protocol Active · Earn money from home with secure USDT TRC-20 staking contracts.',
   supportTelegram: '@TronYieldSupport',
 };
 
-// Updated Investment Plans with explicitly calibrated daily earnings (e.g. $30 plan -> Daily Earning $3 Hogi)
+// Professional Investment Plans with Guaranteed Daily Income
 export const initialPlans: InvestmentPlan[] = [
   {
     id: 'plan_starter_30',
     name: 'Starter Plan - $30',
-    tagline: 'Ideal for newcomers. Daily earning $3.00 Hogi on minimum $30 investment.',
+    tagline: 'Ideal for beginners earning money from home. Earn $3.00 daily income with a $30 investment.',
     dailyRoi: 10.0, // 10% of $30 = $3.00 Daily
     durationDays: 15,
     minDeposit: 30,
     maxDeposit: 100,
     principalReturn: true,
     status: 'active',
-    badge: 'Daily $3 Hogi',
+    badge: 'Earn $3.00 / Day',
     colorScheme: 'emerald',
   },
   {
     id: 'plan_growth_50',
     name: 'Growth Plan - $50',
-    tagline: 'Balanced duration. Daily earning $5.00 Hogi on minimum $50 investment.',
+    tagline: 'Balanced online earning contract. Earn $5.00 daily income with a $50 investment.',
     dailyRoi: 10.0, // 10% of $50 = $5.00 Daily
     durationDays: 20,
     minDeposit: 50,
     maxDeposit: 250,
     principalReturn: true,
     status: 'active',
-    badge: 'Daily $5 Hogi',
+    badge: 'Earn $5.00 / Day',
     colorScheme: 'cyan',
   },
   {
     id: 'plan_advanced_100',
     name: 'Advanced Staking - $100',
-    tagline: 'Accelerated profit tier. Daily earning $12.00 Hogi on minimum $100 investment.',
+    tagline: 'Accelerated home earning tier. Earn $12.00 daily income with a $100 investment.',
     dailyRoi: 12.0, // 12% of $100 = $12.00 Daily
     durationDays: 25,
     minDeposit: 100,
     maxDeposit: 500,
     principalReturn: true,
     status: 'active',
-    badge: 'Daily $12 Hogi',
+    badge: 'Earn $12.00 / Day',
     colorScheme: 'purple',
   },
   {
     id: 'plan_elite_300',
     name: 'Elite Yield - $300',
-    tagline: 'High liquidity yield pool. Daily earning $45.00 Hogi on minimum $300 investment.',
+    tagline: 'High liquidity online wealth generation. Earn $45.00 daily income with a $300 investment.',
     dailyRoi: 15.0, // 15% of $300 = $45.00 Daily
     durationDays: 30,
     minDeposit: 300,
     maxDeposit: 1500,
     principalReturn: true,
     status: 'active',
-    badge: 'Daily $45 Hogi',
+    badge: 'Earn $45.00 / Day',
     colorScheme: 'amber',
   },
   {
     id: 'plan_vip_500',
     name: 'VIP Reserve - $500',
-    tagline: 'Institutional stakers. Daily earning $90.00 Hogi on minimum $500 investment.',
+    tagline: 'Executive home investor staking. Earn $90.00 daily income with a $500 investment.',
     dailyRoi: 18.0, // 18% of $500 = $90.00 Daily
     durationDays: 35,
     minDeposit: 500,
     maxDeposit: 5000,
     principalReturn: true,
     status: 'active',
-    badge: 'Daily $90 Hogi',
+    badge: 'Earn $90.00 / Day',
     colorScheme: 'emerald',
   },
   {
     id: 'plan_whale_1000',
     name: 'Whale Apex - $1,000',
-    tagline: 'Maximum platform reward rate. Daily earning $200.00 Hogi on minimum $1,000 investment.',
+    tagline: 'Maximum platform reward rate. Earn $200.00 daily income with a $1,000 investment.',
     dailyRoi: 20.0, // 20% of $1,000 = $200.00 Daily
     durationDays: 40,
     minDeposit: 1000,
     maxDeposit: 25000,
     principalReturn: true,
     status: 'active',
-    badge: 'Daily $200 Hogi',
+    badge: 'Earn $200.00 / Day',
     colorScheme: 'purple',
   },
 ];
 
-// All initial demo funds removed! Fresh zero balances for all accounts.
+// All initial demo funds removed - fresh zero balances
 export const initialUsers: User[] = [
   {
     id: 'admin_root',
@@ -112,7 +112,7 @@ export const initialUsers: User[] = [
     password: 'admin123',
     role: 'admin',
     trc20Address: 'TXq8aNm7K5gQ2zR7wX9q8bV4NmJkKpLp6X',
-    balance: 0.0, // 0 Demo funds
+    balance: 0.0,
     totalDeposited: 0.0,
     totalWithdrawn: 0.0,
     totalProfitGenerated: 0.0,
@@ -124,24 +124,17 @@ export const initialUsers: User[] = [
   },
 ];
 
-// Zero demo deposits - clean state
 export const initialDeposits: DepositTransaction[] = [];
-
-// Zero demo withdrawals - clean state
 export const initialWithdrawals: WithdrawalRequest[] = [];
-
-// Zero demo investments - clean state
 export const initialInvestments: UserInvestment[] = [];
-
-// Zero demo referrals - clean state
 export const initialReferrals: ReferralRecord[] = [];
 
 export const initialNotifications: PlatformNotification[] = [
   {
     id: 'notif_welcome',
     userId: 'all',
-    title: 'TronYield TRC-20 Protocol Active',
-    message: 'Welcome to TronYield. Deposit USDT (TRC-20) to activate staking plans and earn guaranteed daily yield.',
+    title: 'Welcome to Online Earning with TronYield',
+    message: 'Start earning money from your home today! Deposit USDT (TRC-20) and activate an automated daily yield plan.',
     type: 'admin',
     read: false,
     createdAt: new Date().toISOString(),

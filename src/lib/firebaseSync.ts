@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   setDoc,
+  deleteDoc,
   getDocs,
   getDoc,
   onSnapshot,
@@ -50,6 +51,23 @@ export async function syncDocToFirestore(
     return true;
   } catch (error) {
     console.error(`[Firestore Sync Error] Failed to write to ${collectionName}/${docId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Deletes a document from Firebase Firestore.
+ */
+export async function deleteDocFromFirestore(
+  collectionName: string,
+  docId: string
+): Promise<boolean> {
+  try {
+    await deleteDoc(doc(db, collectionName, docId));
+    console.log(`[Firestore Sync] Successfully deleted ${collectionName}/${docId}`);
+    return true;
+  } catch (error) {
+    console.error(`[Firestore Delete Error] Failed to delete ${collectionName}/${docId}:`, error);
     return false;
   }
 }

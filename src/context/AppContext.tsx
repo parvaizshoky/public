@@ -21,10 +21,12 @@ import {
 } from '../data/initialData';
 import {
   syncDocToFirestore,
+  deleteDocFromFirestore,
   loginWithGoogle,
   registerWithFirebase,
   loginWithFirebase,
   fetchCollectionFromFirestore,
+  fetchDocFromFirestore,
   subscribeToCollection,
 } from '../lib/firebaseSync';
 
@@ -198,28 +200,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [users, currentUser, currentAdmin, deposits, withdrawals, plans, investments, referrals, notifications, settings]);
 
-  // Initial load and real-time synchronization with Firebase Firestore
+  // Initial load and comprehensive real-time synchronization with Firebase Firestore
   useEffect(() => {
     let isMounted = true;
 
     const initFirestoreData = async () => {
       try {
-        // 1. Fetch all existing users from Firestore
+        // 1. Fetch users from Firestore
         const remoteUsers = await fetchCollectionFromFirestore<User>('users');
         if (isMounted && remoteUsers && remoteUsers.length > 0) {
           setUsers((prev) => {
             const map = new Map<string, User>();
             prev.forEach((u) => map.set(u.id, u));
             remoteUsers.forEach((u) => {
-              if (u && u.id) {
-                map.set(u.id, u);
-              }
+              if (u && u.id) map.set(u.id, u);
             });
             return Array.from(map.values());
           });
         }
 
-        // 2. Fetch deposits
+        // 2. Fetch deposits from Firestore
         const remoteDeposits = await fetchCollectionFromFirestore<DepositTransaction>('deposits');
         if (isMounted && remoteDeposits && remoteDeposits.length > 0) {
           setDeposits((prev) => {
@@ -230,7 +230,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
         }
 
-        // 3. Fetch withdrawals
+        // 3. Fetch withdrawals from Firestore
         const remoteWithdrawals = await fetchCollectionFromFirestore<WithdrawalRequest>('withdrawals');
         if (isMounted && remoteWithdrawals && remoteWithdrawals.length > 0) {
           setWithdrawals((prev) => {
@@ -240,6 +240,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return Array.from(map.values());
           });
         }
+
+        // 4. Fetch investments from Firestore
+        const remoteInvestments = await fetchCollectionFromFirestore<UserInvestment>('investments');
+        if (isMounted && remoteInvestments && remoteInvestments.length > 0) {
+          setInvestments((prev) => {
+            const map = new Map<string, UserInvestment>();
+            prev.forEach((inv) => map.set(inv.id, inv));
+            remoteInvestments.forEach((inv) => map.set(inv.id, inv));
+            return Array.from(map.values());
+          });
+        }
+
+        // 5. Fetch plans from Firestore (if none, seed initialPlans to Firestore)
+        const remotePlans = await fetchCollectionFromFirestore<InvestmentPlan>('plans');
+        if (isMounted && remotePlans && remotePlans.length > 0) {
+          setPlans(remotePlans);
+        } else {
+          // Seed standard plans to Firestore for consistency
+          initialPlans.forEach((p) => syncDocToFirestore('plans', p.id, p));
+        }
+
+        // 6. Fetch referrals from Firestore
+        const remoteReferrals = await fetchCollectionFromFirestore<ReferralRecord>('referrals');
+        if (isMounted && remoteReferrals && remoteReferrals.length > 0) {
+          setReferrals(remoteReferrals);
+        }
+
+        // 7. Fetch platform settings from Firestore
+        const remoteSettings = await fetchDocFromFirestore<PlatformSettings>('settings', 'global');
+        if (isMounted && remoteSettings) {
+          setSettings(remoteSettings);
+        } else {
+          syncDocToFirestore('settings', 'global', initialPlatformSettings);
+        }
+
+        // 8. Fetch notifications from Firestore
+        const remoteNotifications = await fetchCollectionFromFirestore<PlatformNotification>('notifications');
+        if (isMounted && remoteNotifications && remoteNotifications.length > 0) {
+          setNotifications(remoteNotifications);
+        }
       } catch (err) {
         console.warn('[Firestore] Initial hydration notice:', err);
       }
@@ -247,25 +287,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     initFirestoreData();
 
-    // Subscribe to real-time changes in Firestore users collection
+    // Subscribe to real-time changes in Firestore users
     const unsubscribeUsers = subscribeToCollection<User>('users', (remoteUsers) => {
       if (isMounted && remoteUsers && remoteUsers.length > 0) {
         setUsers((prev) => {
           const map = new Map<string, User>();
           prev.forEach((u) => map.set(u.id, u));
           remoteUsers.forEach((u) => {
-            if (u && u.id) {
-              map.set(u.id, u);
-            }
+            if (u && u.id) map.set(u.id, u);
           });
           return Array.from(map.values());
         });
       }
     });
 
+    // Subscribe to deposits
+    const unsubscribeDeposits = subscribeToCollection<DepositTransaction>('deposits', (remoteDeposits) => {
+      if (isMounted && remoteDeposits) {
+        setDeposits(remoteDeposits);
+      }
+    });
+
+    // Subscribe to withdrawals
+    const unsubscribeWithdrawals = subscribeToCollection<WithdrawalRequest>('withdrawals', (remoteWithdrawals) => {
+      if (isMounted && remoteWithdrawals) {
+        setWithdrawals(remoteWithdrawals);
+      }
+    });
+
+    // Subscribe to investments
+    const unsubscribeInvestments = subscribeToCollection<UserInvestment>('investments', (remoteInvestments) => {
+      if (isMounted && remoteInvestments) {
+        setInvestments(remoteInvestments);
+      }
+    });
+
+    // Subscribe to plans
+    const unsubscribePlans = subscribeToCollection<InvestmentPlan>('plans', (remotePlans) => {
+      if (isMounted && remotePlans && remotePlans.length > 0) {
+        setPlans(remotePlans);
+      }
+    });
+
     return () => {
       isMounted = false;
       unsubscribeUsers();
+      unsubscribeDeposits();
+      unsubscribeWithdrawals();
+      unsubscribeInvestments();
+      unsubscribePlans();
     };
   }, []);
 

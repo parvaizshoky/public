@@ -50,6 +50,11 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Referrals Collection
+    match /referrals/{referralId} {
+      allow read, write: if true;
+    }
+
     // Platform Settings
     match /settings/{settingId} {
       allow read, write: if true;
