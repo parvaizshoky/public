@@ -1,0 +1,174 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with balance, staking stats, and referral credentials.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string", "maxLength": 50 },
+        "email": { "type": "string", "maxLength": 100 },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "trc20Address": { "type": "string", "maxLength": 64 },
+        "balance": { "type": "number" },
+        "totalDeposited": { "type": "number" },
+        "totalWithdrawn": { "type": "number" },
+        "totalProfitGenerated": { "type": "number" },
+        "referralCode": { "type": "string", "maxLength": 30 },
+        "referredBy": { "type": "string", "maxLength": 30 },
+        "referralCount": { "type": "number" },
+        "referralEarnings": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "username", "email", "role", "balance"]
+    },
+    "Deposit": {
+      "title": "Deposit",
+      "description": "USDT TRC-20 deposit request requiring manual admin verification.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "network": { "type": "string", "enum": ["TRC20"] },
+        "receivingAddress": { "type": "string" },
+        "txHash": { "type": "string", "maxLength": 128 },
+        "proofNote": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string" },
+        "reviewedAt": { "type": "string" },
+        "reviewNotes": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "txHash", "status", "createdAt"]
+    },
+    "Withdrawal": {
+      "title": "Withdrawal",
+      "description": "USDT TRC-20 withdrawal payout request subject to manual audit.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "fee": { "type": "number" },
+        "netAmount": { "type": "number" },
+        "payoutAddress": { "type": "string", "maxLength": 64 },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "createdAt": { "type": "string" },
+        "reviewedAt": { "type": "string" },
+        "txHash": { "type": "string" },
+        "reviewNotes": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "payoutAddress", "status", "createdAt"]
+    },
+    "Plan": {
+      "title": "Plan",
+      "description": "Customizable high-yield staking tier.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "tagline": { "type": "string", "maxLength": 200 },
+        "dailyRoi": { "type": "number" },
+        "durationDays": { "type": "number" },
+        "minDeposit": { "type": "number" },
+        "maxDeposit": { "type": "number" },
+        "principalReturn": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "badge": { "type": "string" },
+        "colorScheme": { "type": "string" }
+      },
+      "required": ["id", "name", "dailyRoi", "durationDays", "minDeposit", "maxDeposit", "status"]
+    },
+    "Investment": {
+      "title": "Investment",
+      "description": "User active staking contract generating daily yield.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "planId": { "type": "string" },
+        "planName": { "type": "string" },
+        "amountInvested": { "type": "number" },
+        "dailyRoi": { "type": "number" },
+        "dailyProfit": { "type": "number" },
+        "totalExpectedProfit": { "type": "number" },
+        "profitClaimed": { "type": "number" },
+        "unclaimedProfit": { "type": "number" },
+        "durationDays": { "type": "number" },
+        "daysElapsed": { "type": "number" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "lastAccrualDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "completed"] }
+      },
+      "required": ["id", "userId", "planId", "amountInvested", "dailyRoi", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Platform activity alert for user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 100 },
+        "message": { "type": "string", "maxLength": 500 },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "title", "message", "read", "createdAt"]
+    },
+    "PlatformSettings": {
+      "title": "PlatformSettings",
+      "description": "Global administration settings for receiving address and rates.",
+      "type": "object",
+      "properties": {
+        "officialTrc20Address": { "type": "string" },
+        "qrCodeUrl": { "type": "string" },
+        "minDeposit": { "type": "number" },
+        "minWithdrawal": { "type": "number" },
+        "withdrawalFeePercent": { "type": "number" },
+        "referralTier1Percent": { "type": "number" },
+        "referralTier2Percent": { "type": "number" },
+        "announcement": { "type": "string" },
+        "supportTelegram": { "type": "string" }
+      },
+      "required": ["officialTrc20Address", "minDeposit", "minWithdrawal"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "User" },
+      "description": "User profiles and wallet accounts"
+    },
+    "/deposits/{depositId}": {
+      "schema": { "$ref": "Deposit" },
+      "description": "Submitted TRC-20 deposits awaiting or completed admin verification"
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": { "$ref": "Withdrawal" },
+      "description": "User withdrawal payout requests"
+    },
+    "/plans/{planId}": {
+      "schema": { "$ref": "Plan" },
+      "description": "Staking plan definitions"
+    },
+    "/investments/{investmentId}": {
+      "schema": { "$ref": "Investment" },
+      "description": "Active staking contracts"
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "Notification" },
+      "description": "Real-time alerts"
+    },
+    "/settings/global": {
+      "schema": { "$ref": "PlatformSettings" },
+      "description": "Platform global config document"
+    }
+  }
+}

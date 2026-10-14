@@ -1,0 +1,8 @@
+{
+  "name": "Remix TronYield - USDT TRC-20 Investment Platform",
+  "description": "Secure USDT TRC-20 crypto investment platform with multi-tier yield plans, manual admin verification for deposits and withdrawals, referral tracking, and comprehensive admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
