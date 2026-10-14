@@ -141,6 +141,25 @@
       },
       "required": ["id", "inviterId", "referredUserId", "joinedAt"]
     },
+    "DailyTask": {
+      "title": "DailyTask",
+      "description": "Daily mathematical and verification tasks unlocked by active investment plans.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "investmentId": { "type": "string" },
+        "planName": { "type": "string" },
+        "question": { "type": "string" },
+        "options": { "type": "array" },
+        "correctAnswer": { "type": "number" },
+        "rewardAmount": { "type": "number" },
+        "completed": { "type": "boolean" },
+        "completedAt": { "type": "string" },
+        "dayIndex": { "type": "number" }
+      },
+      "required": ["id", "userId", "investmentId", "question", "rewardAmount", "completed"]
+    },
     "PlatformSettings": {
       "title": "PlatformSettings",
       "description": "Global administration settings for receiving address and rates.",

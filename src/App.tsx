@@ -20,6 +20,7 @@ import { PlansTab } from './components/UserDashboard/PlansTab';
 import { WithdrawTab } from './components/UserDashboard/WithdrawTab';
 import { ReferralTab } from './components/UserDashboard/ReferralTab';
 import { ProfileTab } from './components/UserDashboard/ProfileTab';
+import { TasksTab } from './components/UserDashboard/TasksTab';
 
 import { ShieldAlert, Coins } from 'lucide-react';
 
@@ -120,6 +121,7 @@ const AppContent: React.FC = () => {
         {activeTab === 'overview' && <OverviewTab />}
         {activeTab === 'deposit' && <DepositTab />}
         {activeTab === 'plans' && <PlansTab />}
+        {activeTab === 'tasks' && <TasksTab />}
         {activeTab === 'withdraw' && <WithdrawTab />}
         {activeTab === 'referral' && <ReferralTab />}
         {activeTab === 'profile' && <ProfileTab />}

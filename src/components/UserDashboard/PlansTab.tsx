@@ -17,7 +17,9 @@ import {
   Sparkles,
   Globe,
   ExternalLink,
+  ListTodo,
 } from 'lucide-react';
+import { getTaskCountForAmount } from '../../utils/taskGenerator';
 
 export const PlansTab: React.FC = () => {
   const {
@@ -214,6 +216,15 @@ export const PlansTab: React.FC = () => {
                       {plan.principalReturn ? '100% at End' : 'Included in ROI'}
                     </span>
                   </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-200/60">
+                    <span className="text-slate-500 font-sans flex items-center gap-1">
+                      <ListTodo className="w-3.5 h-3.5 text-teal-600" />
+                      <span>Daily Earning Tasks:</span>
+                    </span>
+                    <span className="font-bold text-teal-700 font-sans bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                      {getTaskCountForAmount(plan.minDeposit)} Tasks / Day
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -232,11 +243,19 @@ export const PlansTab: React.FC = () => {
                     </div>
 
                     <button
+                      onClick={() => setActiveTab('tasks')}
+                      className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5"
+                    >
+                      <ListTodo className="w-3.5 h-3.5" />
+                      <span>Solve Today&apos;s Daily Tasks</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
                       onClick={() => handleOpenModal(plan)}
-                      className="w-full py-2 px-3 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold text-xs rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1.5"
+                      className="w-full py-1.5 px-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-600 font-semibold text-xs rounded-xl transition-all shadow-2xs flex items-center justify-center gap-1"
                     >
                       <span>Invest More in Plan</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ) : (

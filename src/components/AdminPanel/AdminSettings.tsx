@@ -7,6 +7,9 @@ import {
   RotateCcw,
   Check,
   Megaphone,
+  QrCode,
+  Copy,
+  ExternalLink,
 } from 'lucide-react';
 
 export const AdminSettings: React.FC = () => {
@@ -27,6 +30,13 @@ export const AdminSettings: React.FC = () => {
   const [announcement, setAnnouncement] = useState(settings.announcement);
   const [supportTelegram, setSupportTelegram] = useState(settings.supportTelegram);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+
+  const handleCopyAddress = () => {
+    navigator.clipboard.writeText(officialTrc20Address);
+    setCopiedAddress(true);
+    setTimeout(() => setCopiedAddress(false), 2000);
+  };
 
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,25 +94,79 @@ export const AdminSettings: React.FC = () => {
       <form onSubmit={handleSaveSettings} className="space-y-6">
         {/* Receiving Wallet Section */}
         <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <Coins className="w-4 h-4 text-emerald-600" />
-            <span>Platform USDT (TRC-20) Receiving Wallet</span>
-          </h3>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            This is the official TRC-20 address rendered on all user deposit screens and QR codes.
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Coins className="w-4 h-4 text-emerald-600" />
+                <span>Platform USDT (TRC-20) Receiving Wallet</span>
+              </h3>
+              <p className="text-xs text-slate-500 leading-relaxed mt-0.5">
+                This is the official TRC-20 address rendered on all user deposit screens and QR codes.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleCopyAddress}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition-colors"
+              >
+                {copiedAddress ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedAddress ? 'Copied' : 'Copy'}</span>
+              </button>
+              <a
+                href={`https://tronscan.org/#/address/${officialTrc20Address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-xl border border-emerald-200 transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>TronScan</span>
+              </a>
+            </div>
+          </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Admin Tron Receiving Address (TRC-20)
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+              <span>Admin Tron Receiving Address (TRC-20)</span>
+              {officialTrc20Address.trim().startsWith('T') && officialTrc20Address.trim().length >= 30 ? (
+                <span className="text-[10px] text-emerald-700 font-semibold flex items-center gap-1">
+                  <Check className="w-3 h-3 text-emerald-600" /> Valid TRC-20 standard format
+                </span>
+              ) : (
+                <span className="text-[10px] text-amber-600 font-semibold">
+                  TRON address should start with capital 'T'
+                </span>
+              )}
             </label>
             <input
               type="text"
               required
               value={officialTrc20Address}
               onChange={(e) => setOfficialTrc20Address(e.target.value)}
-              className="w-full px-3 py-2.5 text-xs font-mono bg-slate-50 border border-slate-300 rounded-xl text-emerald-800 font-bold focus:bg-white focus:outline-none focus:border-emerald-500"
+              className="w-full px-3 py-2.5 text-xs font-mono bg-slate-50 border border-slate-300 rounded-xl text-emerald-800 font-bold focus:bg-white focus:outline-none focus:border-emerald-500 shadow-inner"
             />
+          </div>
+
+          {/* Live QR Preview & Helper */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center gap-4">
+            <div className="w-16 h-16 bg-white p-1 rounded-xl border border-slate-200 shrink-0 flex items-center justify-center overflow-hidden">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
+                  officialTrc20Address.trim() || 'TRON'
+                )}`}
+                alt="Deposit QR"
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <div className="space-y-1 text-xs">
+              <span className="font-bold text-slate-800 flex items-center gap-1.5">
+                <QrCode className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Auto-Generated Deposit QR Code</span>
+              </span>
+              <p className="text-[11px] text-slate-500">
+                Whenever you save a new TRC-20 address, this QR code updates automatically and is served to users on the Deposit USDT tab.
+              </p>
+            </div>
           </div>
         </div>
 

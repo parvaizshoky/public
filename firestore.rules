@@ -55,18 +55,13 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    // Daily Tasks Collection
+    match /tasks/{taskId} {
+      allow read, write: if true;
+    }
+
     // Platform Settings
     match /settings/{settingId} {
-      allow read, write: if true;
-    }
-
-    // Ad Campaigns & Paid Tasks Collection
-    match /campaigns/{campaignId} {
-      allow read, write: if true;
-    }
-
-    // Campaign Claims & Logs
-    match /campaign_claims/{claimId} {
       allow read, write: if true;
     }
 

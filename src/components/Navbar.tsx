@@ -13,6 +13,7 @@ import {
   Users,
   Settings,
   Shield,
+  ListTodo,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -34,12 +35,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNotifications }) => {
     unreadCount,
     deposits,
     withdrawals,
+    dailyTasks,
   } = useApp();
 
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const pendingDepositsCount = deposits.filter((d) => d.status === 'pending').length;
   const pendingWithdrawalsCount = withdrawals.filter((w) => w.status === 'pending').length;
+  const userPendingTasksCount = dailyTasks.filter(
+    (t) => currentUser && t.userId === currentUser.id && !t.completed
+  ).length;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-2xs">
@@ -117,6 +122,22 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNotifications }) => {
                 >
                   <Layers className="w-4 h-4 text-emerald-600" />
                   Yield Plans
+                </button>
+                <button
+                  onClick={() => setActiveTab('tasks')}
+                  className={`px-3 py-2 rounded-xl transition-colors whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
+                    activeTab === 'tasks'
+                      ? 'bg-emerald-50 text-emerald-800 font-bold border border-emerald-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  <ListTodo className="w-4 h-4 text-emerald-600" />
+                  <span>Daily Tasks</span>
+                  {userPendingTasksCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px] font-mono font-bold flex items-center justify-center animate-pulse">
+                      {userPendingTasksCount}
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={() => setActiveTab('withdraw')}
@@ -362,6 +383,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenNotifications }) => {
                 }`}
               >
                 Plans
+              </button>
+              <button
+                onClick={() => setActiveTab('tasks')}
+                className={`px-2.5 py-1 text-xs rounded-md whitespace-nowrap font-medium flex items-center gap-1 ${
+                  activeTab === 'tasks' ? 'bg-emerald-50 text-emerald-800 font-bold' : 'text-slate-600'
+                }`}
+              >
+                <span>Tasks</span>
+                {userPendingTasksCount > 0 && (
+                  <span className="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white text-[9px] font-mono font-bold flex items-center justify-center">
+                    {userPendingTasksCount}
+                  </span>
+                )}
               </button>
               <button
                 onClick={() => setActiveTab('withdraw')}

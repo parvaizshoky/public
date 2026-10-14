@@ -8,6 +8,7 @@ import {
   ReferralRecord,
   PlatformNotification,
   PlatformSettings,
+  DailyTask,
 } from '../types';
 import {
   initialUsers,
@@ -19,6 +20,7 @@ import {
   initialNotifications,
   initialPlatformSettings,
 } from '../data/initialData';
+import { generateTasksForInvestment } from '../utils/taskGenerator';
 import {
   syncDocToFirestore,
   deleteDocFromFirestore,
@@ -43,6 +45,14 @@ interface AppContextType {
   referrals: ReferralRecord[];
   notifications: PlatformNotification[];
   settings: PlatformSettings;
+  dailyTasks: DailyTask[];
+  completeDailyTask: (
+    taskId: string,
+    userAnswer: number,
+    captchaInput: string,
+    expectedCaptcha: string
+  ) => { success: boolean; message?: string; earned?: number };
+  generateDailyTasksForUser: (userId: string) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   adminTab: string;
@@ -79,6 +89,7 @@ interface AppContextType {
 
   // Admin Controls
   adminUpdateSettings: (newSettings: Partial<PlatformSettings>) => void;
+  adminUpdateDepositAddress: (address: string, customQrCode?: string) => { success: boolean; message?: string };
   adminCreatePlan: (plan: Omit<InvestmentPlan, 'id'>) => void;
   adminUpdatePlan: (plan: InvestmentPlan) => void;
   adminDeletePlan: (planId: string) => void;
@@ -175,6 +186,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [referrals, setReferrals] = useState<ReferralRecord[]>(savedState?.referrals || initialReferrals);
   const [notifications, setNotifications] = useState<PlatformNotification[]>(savedState?.notifications || initialNotifications);
   const [settings, setSettings] = useState<PlatformSettings>(savedState?.settings || initialPlatformSettings);
+  const [dailyTasks, setDailyTasks] = useState<DailyTask[]>(savedState?.dailyTasks || []);
 
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [adminTab, setAdminTab] = useState<string>('overview');
@@ -193,12 +205,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         referrals,
         notifications,
         settings,
+        dailyTasks,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
     } catch {
       // ignore storage error
     }
-  }, [users, currentUser, currentAdmin, deposits, withdrawals, plans, investments, referrals, notifications, settings]);
+  }, [users, currentUser, currentAdmin, deposits, withdrawals, plans, investments, referrals, notifications, settings, dailyTasks]);
 
   // Initial load and comprehensive real-time synchronization with Firebase Firestore
   useEffect(() => {
@@ -280,6 +293,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (isMounted && remoteNotifications && remoteNotifications.length > 0) {
           setNotifications(remoteNotifications);
         }
+
+        // 9. Fetch daily tasks from Firestore
+        const remoteTasks = await fetchCollectionFromFirestore<DailyTask>('tasks');
+        if (isMounted && remoteTasks && remoteTasks.length > 0) {
+          setDailyTasks(remoteTasks);
+        }
       } catch (err) {
         console.warn('[Firestore] Initial hydration notice:', err);
       }
@@ -329,6 +348,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     });
 
+    // Subscribe to tasks
+    const unsubscribeTasks = subscribeToCollection<DailyTask>('tasks', (remoteTasks) => {
+      if (isMounted && remoteTasks) {
+        setDailyTasks(remoteTasks);
+      }
+    });
+
     return () => {
       isMounted = false;
       unsubscribeUsers();
@@ -336,6 +362,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       unsubscribeWithdrawals();
       unsubscribeInvestments();
       unsubscribePlans();
+      unsubscribeTasks();
     };
   }, []);
 
@@ -961,14 +988,103 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setInvestments((prev) => [newInvestment, ...prev]);
     syncDocToFirestore('investments', newInvestment.id, newInvestment);
 
+    // Generate daily tasks for this plan activation!
+    // As requested: "agr koi user plan ko activate kerta hai to ose daily bases per kuchh tasks diye jai . jaise math ke . simple se.or ye tasks jitna bara plan hoo os hisaab se tasks mille."
+    const generatedTasks = generateTasksForInvestment(
+      currentUser.id,
+      newInvestment.id,
+      plan.name,
+      amount,
+      dailyProfit,
+      1
+    );
+
+    setDailyTasks((prev) => [...generatedTasks, ...prev]);
+    generatedTasks.forEach((t) => syncDocToFirestore('tasks', t.id, t));
+
     addNotification(
       currentUser.id,
-      'Investment Activated',
-      `Successfully locked ${amount.toFixed(2)} USDT into ${plan.name}. You will generate ${dailyProfit.toFixed(2)} USDT (${plan.dailyRoi}%) daily!`,
+      'Investment Activated & Tasks Unlocked!',
+      `Successfully locked ${amount.toFixed(2)} USDT into ${plan.name}. You received ${generatedTasks.length} daily math tasks to complete and claim daily yield!`,
       'investment'
     );
 
     return { success: true };
+  };
+
+  // Complete a Daily Math Task with Captcha Verification
+  // As requested: "and task complete kre to verification captcha bhii maange"
+  const completeDailyTask = (
+    taskId: string,
+    userAnswer: number,
+    captchaInput: string,
+    expectedCaptcha: string
+  ): { success: boolean; message?: string; earned?: number } => {
+    if (!currentUser) return { success: false, message: 'Please log in to complete tasks.' };
+    const task = dailyTasks.find((t) => t.id === taskId);
+    if (!task) return { success: false, message: 'Task not found.' };
+    if (task.completed) return { success: false, message: 'This task is already completed.' };
+
+    // 1. Check math answer
+    if (Number(userAnswer) !== Number(task.correctAnswer)) {
+      return { success: false, message: 'Incorrect math answer. Please calculate carefully and try again.' };
+    }
+
+    // 2. Check security captcha
+    if (captchaInput.trim().toUpperCase() !== expectedCaptcha.trim().toUpperCase()) {
+      return { success: false, message: 'Invalid security captcha code. Please enter the characters shown.' };
+    }
+
+    // 3. Mark task completed
+    const completedTask: DailyTask = {
+      ...task,
+      completed: true,
+      completedAt: new Date().toISOString(),
+    };
+
+    setDailyTasks((prev) => prev.map((t) => (t.id === taskId ? completedTask : t)));
+    syncDocToFirestore('tasks', taskId, completedTask);
+
+    // 4. Credit reward immediately to user balance
+    const reward = task.rewardAmount;
+    const updatedUser = {
+      ...currentUser,
+      balance: currentUser.balance + reward,
+      totalProfitGenerated: currentUser.totalProfitGenerated + reward,
+    };
+    setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updatedUser : u)));
+    setCurrentUser(updatedUser);
+    syncDocToFirestore('users', currentUser.id, updatedUser);
+
+    addNotification(
+      currentUser.id,
+      'Task Verified & Reward Paid!',
+      `You earned +$${reward.toFixed(2)} USDT from completing task for ${task.planName}!`,
+      'task'
+    );
+
+    return { success: true, earned: reward };
+  };
+
+  // Generate tasks for user on demand if needed
+  const generateDailyTasksForUser = (userId: string) => {
+    const userActiveInvs = investments.filter((i) => i.userId === userId && i.status === 'active');
+    const newTasks: DailyTask[] = [];
+    userActiveInvs.forEach((inv) => {
+      const tasks = generateTasksForInvestment(
+        inv.userId,
+        inv.id,
+        inv.planName,
+        inv.amountInvested,
+        inv.dailyProfit,
+        inv.daysElapsed || 1
+      );
+      newTasks.push(...tasks);
+    });
+    if (newTasks.length > 0) {
+      setDailyTasks((prev) => [...newTasks, ...prev]);
+      newTasks.forEach((t) => syncDocToFirestore('tasks', t.id, t));
+    }
   };
 
   // Claim accumulated profit from active investment
@@ -1009,7 +1125,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  // Simulate 24H Yield Cycle (accrues 1 day of daily profit for all active investments)
+  // Simulate 24H Yield Cycle (accrues 1 day of daily profit and regenerates fresh tasks)
   const simulateYieldCycle = () => {
     let totalAccruedForCurrent = 0;
 
@@ -1036,11 +1152,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })
     );
 
+    // Generate fresh set of daily tasks for next 24H cycle!
+    const activeInvs = investments.filter((i) => i.status === 'active');
+    const freshTasks: DailyTask[] = [];
+    activeInvs.forEach((inv) => {
+      const tasks = generateTasksForInvestment(
+        inv.userId,
+        inv.id,
+        inv.planName,
+        inv.amountInvested,
+        inv.dailyProfit,
+        inv.daysElapsed + 1
+      );
+      freshTasks.push(...tasks);
+    });
+
+    if (freshTasks.length > 0) {
+      setDailyTasks((prev) => [...freshTasks, ...prev]);
+      freshTasks.forEach((t) => syncDocToFirestore('tasks', t.id, t));
+    }
+
     if (currentUser && totalAccruedForCurrent > 0) {
       addNotification(
         currentUser.id,
-        '24H Yield Accrued',
-        `Simulated 24H cycle: ${totalAccruedForCurrent.toFixed(2)} USDT profit generated ready to claim!`,
+        '24H Yield Accrued & Fresh Tasks Generated!',
+        `Simulated 24H cycle: ${totalAccruedForCurrent.toFixed(2)} USDT yield progression updated and new daily tasks generated!`,
         'investment'
       );
     }
@@ -1051,6 +1187,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
     syncDocToFirestore('settings', 'global', updated);
+  };
+
+  const adminUpdateDepositAddress = (address: string, customQrCode?: string) => {
+    const cleanAddress = address.trim();
+    if (!cleanAddress) {
+      return { success: false, message: 'Deposit address cannot be empty.' };
+    }
+    const qrCodeUrl =
+      customQrCode && customQrCode.trim()
+        ? customQrCode.trim()
+        : `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(cleanAddress)}`;
+
+    const updated: PlatformSettings = {
+      ...settings,
+      officialTrc20Address: cleanAddress,
+      qrCodeUrl,
+    };
+    setSettings(updated);
+    syncDocToFirestore('settings', 'global', updated);
+
+    if (currentUser) {
+      addNotification(
+        currentUser.id,
+        'Deposit Address Updated',
+        `The platform TRC-20 deposit address has been updated to: ${cleanAddress.slice(0, 8)}...${cleanAddress.slice(-6)}`,
+        'admin'
+      );
+    }
+    return { success: true, message: 'Platform deposit address updated and synchronized to Firebase successfully!' };
   };
 
   const adminCreatePlan = (planData: Omit<InvestmentPlan, 'id'>) => {
@@ -1142,9 +1307,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNotifications(initialNotifications);
     setSettings(initialPlatformSettings);
     setCurrentAdmin(null);
+    setDailyTasks([]);
     navigateToRoute('user');
     setActiveTab('overview');
   };
+
+  // Auto-generate tasks for current user if they have active investments but no tasks generated yet
+  useEffect(() => {
+    if (currentUser) {
+      const userActiveInvs = investments.filter((i) => i.userId === currentUser.id && i.status === 'active');
+      const hasTasks = dailyTasks.some((t) => t.userId === currentUser.id);
+      if (userActiveInvs.length > 0 && !hasTasks) {
+        generateDailyTasksForUser(currentUser.id);
+      }
+    }
+  }, [currentUser, investments]);
 
   return (
     <AppContext.Provider
@@ -1159,6 +1336,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         referrals,
         notifications,
         settings,
+        dailyTasks,
+        completeDailyTask,
+        generateDailyTasksForUser,
         activeTab,
         setActiveTab,
         adminTab,
@@ -1183,6 +1363,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         claimInvestmentProfit,
         simulateYieldCycle,
         adminUpdateSettings,
+        adminUpdateDepositAddress,
         adminCreatePlan,
         adminUpdatePlan,
         adminDeletePlan,

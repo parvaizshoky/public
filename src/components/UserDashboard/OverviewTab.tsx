@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Coins,
+  ListTodo,
+  ArrowRight,
 } from 'lucide-react';
 
 export const OverviewTab: React.FC = () => {
@@ -23,6 +25,7 @@ export const OverviewTab: React.FC = () => {
     deposits,
     withdrawals,
     settings,
+    dailyTasks,
     setActiveTab,
     simulateYieldCycle,
     claimInvestmentProfit,
@@ -169,6 +172,46 @@ export const OverviewTab: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Daily Tasks Banner */}
+      {(() => {
+        const userTasks = dailyTasks.filter((t) => t.userId === currentUser.id);
+        const pendingCount = userTasks.filter((t) => !t.completed).length;
+        const completedCount = userTasks.filter((t) => t.completed).length;
+
+        return (
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-emerald-50 via-teal-50/40 to-white border border-emerald-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-emerald-600/20">
+                <ListTodo className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-extrabold text-slate-900">
+                    Daily Earning Tasks & Verification
+                  </h3>
+                  <span className="text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full">
+                    {pendingCount} Pending
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {userInvestments.length > 0
+                    ? `Solve daily math verification challenges with anti-bot captcha to claim instant USDT earnings.`
+                    : 'Activate an investment plan to unlock daily tasks tailored to your plan size!'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveTab('tasks')}
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap self-start sm:self-auto"
+            >
+              <span>{userInvestments.length > 0 ? 'Solve Today\'s Tasks' : 'View Daily Tasks'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      })()}
 
       {/* Yield Accrual Quick Sandbox Action */}
       <div className="p-4 rounded-3xl bg-white border border-emerald-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

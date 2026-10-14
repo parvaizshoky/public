@@ -101,7 +101,21 @@ export interface ReferralRecord {
   tier: 1 | 2;
 }
 
-export type NotificationType = 'deposit' | 'withdrawal' | 'investment' | 'referral' | 'admin' | 'info';
+export interface DailyTask {
+  id: string;
+  userId: string;
+  investmentId: string;
+  planName: string;
+  question: string;
+  options: number[];
+  correctAnswer: number;
+  rewardAmount: number;
+  completed: boolean;
+  completedAt?: string;
+  dayIndex: number;
+}
+
+export type NotificationType = 'deposit' | 'withdrawal' | 'investment' | 'referral' | 'admin' | 'info' | 'task';
 
 export interface PlatformNotification {
   id: string;
